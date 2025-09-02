@@ -24,7 +24,6 @@ class LoginActivity : AppCompatActivity() {
         binding = ActivityLoginBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // 🔹 Botón de login
         binding.btnLogin.setOnClickListener {
             val email = binding.etEmail.text.toString().trim()
             val password = binding.etPassword.text.toString().trim()
@@ -35,8 +34,10 @@ class LoginActivity : AppCompatActivity() {
                 Toast.makeText(this, "Complete todos los campos", Toast.LENGTH_SHORT).show()
             }
         }
-
-        // 🔹 Observa el estado del login
+        binding.btnLogin.setOnClickListener {
+            val intent = Intent(this, MainActivity::class.java)
+            startActivity(intent)
+        }
         lifecycleScope.launch {
             loginViewModel.loginState.collectLatest { state ->
                 when (state) {

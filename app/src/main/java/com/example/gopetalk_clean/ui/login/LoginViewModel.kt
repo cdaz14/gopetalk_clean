@@ -32,7 +32,7 @@ class LoginViewModel @Inject constructor(
     val uiEvent: SharedFlow<LoginUiEvent> = _uiEvent
 
     fun login(email: String, password: String) {
-        // 🔹 Validaciones locales antes de llamar al caso de uso
+
         if (email.isBlank()) {
             emitEvent(LoginUiEvent.ShowEmailError("El correo es obligatorio"))
             return

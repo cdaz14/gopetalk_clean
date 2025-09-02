@@ -9,8 +9,8 @@ class AuthInterceptor(
 ) : Interceptor {
 
     override fun intercept(chain: Interceptor.Chain): Response {
-        val originalRequest = chain.request()
 
+        val originalRequest = chain.request()
         val token = sessionManager.getAccessToken()
 
         val newRequest = if (!token.isNullOrEmpty()) {

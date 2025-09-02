@@ -1,9 +1,9 @@
-// data/repository/AuthRepositoryImpl.kt
 package com.example.gopetalk_clean.data.repository
 
 import com.example.gopetalk_clean.data.api.AuthService
 import com.example.gopetalk_clean.data.api.LoginRequest
 import com.example.gopetalk_clean.data.api.LoginResponse
+import com.example.gopetalk_clean.data.api.LogoutResponse
 import com.example.gopetalk_clean.data.api.RegisterRequest
 import com.example.gopetalk_clean.data.api.RegisterResponse
 import com.example.gopetalk_clean.domain.repository.AuthRepository
@@ -22,6 +22,7 @@ class AuthRepositoryImpl @Inject constructor(
         return authService.register(request)
     }
 
-    override suspend fun logout() {
+    override suspend fun logout(response: LogoutResponse): Response<LogoutResponse> {
+        return authService.logout()
     }
 }

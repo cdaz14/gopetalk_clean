@@ -1,4 +1,4 @@
-package com.example.gopetalk_clean.domain.model
+package com.example.gopetalk_clean.domain.state
 
 import com.example.gopetalk_clean.data.api.LoginResponse
 

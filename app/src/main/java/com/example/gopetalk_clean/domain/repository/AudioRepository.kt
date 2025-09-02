@@ -1,4 +1,8 @@
 package com.example.gopetalk_clean.domain.repository
 
-class AudioRepository {
+interface AudioRepository  {
+    suspend fun startSending()
+    suspend fun stopSending()
+    fun playReceivedAudio(data: ByteArray)
+    fun isUserTalking(): Boolean
 }

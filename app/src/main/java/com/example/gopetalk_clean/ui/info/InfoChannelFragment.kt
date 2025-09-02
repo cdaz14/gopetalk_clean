@@ -10,23 +10,19 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.example.gopetalk_clean.R
 import com.example.gopetalk_clean.adapter.ChannelsAdapter
 import com.example.gopetalk_clean.databinding.FragmentInfoChannelBinding
-import com.example.gopetalk_clean.presentation.viewmodel.ChannelViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
-class InfoChannelFragment : Fragment(R.layout.fragment_info_channel) {
+class InfoChannelFragment : Fragment() {
 
     private var _binding: FragmentInfoChannelBinding? = null
     private val binding get() = _binding!!
 
-    private val channelViewModel: ChannelViewModel by viewModels()
-    private val channelUsersViewModel: ChannelUsersViewModel by viewModels()
-
+    private val viewModel: InfoChannelsViewModel by viewModels()
     private lateinit var adapter: ChannelsAdapter
 
     override fun onCreateView(
@@ -40,60 +36,52 @@ class InfoChannelFragment : Fragment(R.layout.fragment_info_channel) {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
         setupRecycler()
-
-        //  Observar lista de canales desde uiState del ChannelViewModel
-        viewLifecycleOwner.lifecycleScope.launch {
-            channelViewModel.uiState.collectLatest { state ->
-                adapter.updateData(state.channels)
-            }
-        }
-
-        // 🔹 Observar el estado de usuarios en el canal
-        viewLifecycleOwner.lifecycleScope.launch {
-            channelUsersViewModel.uiState.collectLatest { state ->
-                binding.textChannel.text = state.channelName ?: "Canal"
-                binding.textUsersOnChannel.text = "${state.userCount} usuarios"
-            }
-        }
-
-        // 🔹 Botón para desplegar/ocultar lista de canales
-        binding.btnSeeChannels.setOnClickListener {
-            binding.recyclerChannels.visibility =
-                if (binding.recyclerChannels.isGone) View.VISIBLE else View.GONE
-
-            if (binding.recyclerChannels.isVisible) {
-                channelViewModel.fetchChannels()
-            }
-        }
-
-        // 🔹 Botón desconectar
-        binding.btnDisconnect.setOnClickListener {
-            channelViewModel.disconnectChannel()
-            binding.textChannel.text = "Sin canal"
-            binding.textUsersOnChannel.text = "0 usuarios"
-        }
+        observeUiState()
+        setupButtons()
+        viewModel.fetchChannels()
     }
 
     private fun setupRecycler() {
+
         adapter = ChannelsAdapter(emptyList()) { selectedChannel ->
-            binding.textChannel.text = selectedChannel
 
-            channelUsersViewModel.fetchChannelUsers(
-                channelId = selectedChannel,
-                channelName = selectedChannel
-            )
+            viewModel.connectToChannel(selectedChannel,String(),String()  )
+        }
+        binding.recyclerChannels.apply {
+            layoutManager = LinearLayoutManager(requireContext())
+            adapter = this@InfoChannelFragment.adapter
+        }
+    }
 
-            binding.recyclerChannels.visibility = View.GONE
+    private fun observeUiState() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.uiState.collectLatest { state ->
+                adapter.updateData(state.channels)
+                binding.textChannel.text = state.channelName ?: "N/A"
+                binding.textUsersOnChannel.text = state.userCountText
+                binding.btnDisconnect.isEnabled = state.isConnected
+            }
+        }
+    }
+
+    private fun setupButtons() {
+        binding.btnSeeChannels.setOnClickListener {
+            binding.recyclerChannels.visibility =
+                if (binding.recyclerChannels.isGone) View.VISIBLE else View.GONE
+            if (binding.recyclerChannels.isVisible) {
+                viewModel.fetchChannels()
+            }
         }
 
-        binding.recyclerChannels.layoutManager = LinearLayoutManager(requireContext())
-        binding.recyclerChannels.adapter = adapter
+        binding.btnDisconnect.setOnClickListener {
+            viewModel.disconnectFromChannel()
+        }
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
     }
+
 }

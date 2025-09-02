@@ -1,7 +1,6 @@
 package com.example.gopetalk_clean.di
 
 import android.content.Context
-
 import com.example.gopetalk_clean.data.api.AuthInterceptor
 import com.example.gopetalk_clean.data.api.AuthService
 import com.example.gopetalk_clean.data.api.ChannelService
@@ -12,6 +11,7 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import jakarta.inject.Qualifier
 import jakarta.inject.Singleton
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -21,10 +21,13 @@ import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
-
 @Module
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
+
+    @Qualifier
+    @Retention(AnnotationRetention.BINARY)
+    annotation class WebSocketUrl
 
     // SessionManager
     @Provides
@@ -73,7 +76,6 @@ object NetworkModule {
     @Singleton
     fun provideChannelService(retrofit: Retrofit): ChannelService =
         retrofit.create(ChannelService::class.java)
-
 
     // WebSocket Factory (inyección de dependencias dinámica)
     @Provides

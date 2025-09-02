@@ -2,6 +2,7 @@ package com.example.gopetalk_clean.data.storage
 
 import android.content.Context
 import android.content.SharedPreferences
+import androidx.core.content.edit
 
 class SessionManager(context: Context) {
 
@@ -26,36 +27,33 @@ class SessionManager(context: Context) {
         return sharedPreferences.getString(KEY_ACCESS_TOKEN, null)
     }
 
-    fun setCurrentChannel(channel: String) {
-        sharedPreferences.edit().putString(KEY_CURRENT_CHANNEL, channel).apply()
-    }
-
-    fun getCurrentChannel(): String? {
-        return sharedPreferences.getString(KEY_CURRENT_CHANNEL, null)
-    }
-
-    fun clearCurrentChannel() {
-        sharedPreferences.edit().remove(KEY_CURRENT_CHANNEL).apply()
-    }
-
     fun saveUserId(userId: Int) {
-        sharedPreferences.edit().putInt(KEY_USER_ID, userId).apply()
+        sharedPreferences.edit { putInt(KEY_USER_ID, userId) }
     }
+
+    fun getUserId(): Int {
+        return sharedPreferences.getInt(KEY_USER_ID, -1)
+    }
+
 
     fun saveUserName(name: String) {
-        sharedPreferences.edit().putString(KEY_USER_FIRST_NAME, name).apply()
+        sharedPreferences.edit { putString(KEY_USER_FIRST_NAME, name) }
     }
 
     fun saveUserLastName(lastName: String) {
-        sharedPreferences.edit().putString(KEY_USER_LAST_NAME, lastName).apply()
+        sharedPreferences.edit { putString(KEY_USER_LAST_NAME, lastName) }
     }
 
     fun saveUserEmail(email: String) {
-        sharedPreferences.edit().putString(KEY_USER_EMAIL, email).apply()
+        sharedPreferences.edit { putString(KEY_USER_EMAIL, email) }
+    }
+
+    fun clearCurrentChannel() {
+        sharedPreferences.edit { remove(com.example.gopetalk_clean.data.storage.SessionManager.Companion.KEY_CURRENT_CHANNEL) }
     }
 
     fun clearSession() {
-        sharedPreferences.edit().clear().apply()
+        sharedPreferences.edit { clear() }
     }
 
 }

@@ -85,6 +85,7 @@ class WebSocketManager @Inject constructor(
         this.webSocket = null
     }
 
+    @Suppress ("UNUSED")
     fun close() {
         disconnect()
         job.cancel() // ← FORMA CORRECTA DE CANCELAR

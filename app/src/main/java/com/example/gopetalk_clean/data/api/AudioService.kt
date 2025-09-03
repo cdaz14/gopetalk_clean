@@ -14,78 +14,85 @@ import javax.inject.Singleton
 @Singleton
 class AudioService @Inject constructor() {
 
-    private val sampleRate = 16000
-
-    private val bufferSize = AudioRecord.getMinBufferSize(
-        sampleRate,
-        AudioFormat.CHANNEL_IN_MONO,
-        AudioFormat.ENCODING_PCM_16BIT
-    ).coerceAtLeast(2048)
-
     private var recorder: AudioRecord? = null
-    private var isRecording = false
     private var audioTrack: AudioTrack? = null
+    private var isRecording = false
+    private var isPlaying = false
 
     @RequiresPermission(Manifest.permission.RECORD_AUDIO)
     fun startRecording(onData: (ByteArray) -> Unit) {
-        if (bufferSize <= 0) {
-            throw IllegalStateException("Buffer inválido: $bufferSize")
-        }
+        stopRecording() // Cleanup primero
+
+        val bufferSize = AudioRecord.getMinBufferSize(
+            SAMPLE_RATE, CHANNEL_CONFIG, ENCODING
+        ).coerceAtLeast(MIN_BUFFER_SIZE)
 
         recorder = AudioRecord(
             MediaRecorder.AudioSource.MIC,
-            sampleRate,
-            AudioFormat.CHANNEL_IN_MONO,
-            AudioFormat.ENCODING_PCM_16BIT,
+            SAMPLE_RATE,
+            CHANNEL_CONFIG,
+            ENCODING,
             bufferSize
-        )
+        ).takeIf { it.state == AudioRecord.STATE_INITIALIZED }
 
-        if (recorder?.state != AudioRecord.STATE_INITIALIZED) {
-            throw IllegalStateException("AudioRecord no se pudo inicializar")
-        }
+        recorder ?: throw IllegalStateException("AudioRecord no inicializado")
 
-        recorder?.startRecording()
+        recorder!!.startRecording()
         isRecording = true
 
         Thread {
             val buffer = ByteArray(bufferSize)
             while (isRecording) {
-                val read = recorder?.read(buffer, 0, buffer.size) ?: 0
-                if (read > 0) {
-                    onData(buffer.copyOf(read))
-                }
+                val read = recorder!!.read(buffer, 0, buffer.size)
+                if (read > 0) onData(buffer.copyOf(read))
             }
         }.start()
     }
 
-    suspend fun stopRecording() = withContext(Dispatchers.IO) {
+    fun stopRecording() {
         isRecording = false
-        recorder?.stop()
-        recorder?.release()
+        recorder?.apply {
+            stop()
+            release()
+        }
         recorder = null
     }
 
     fun playAudio(data: ByteArray) {
-        if (audioTrack == null) {
-            val minBuffer = AudioTrack.getMinBufferSize(
-                sampleRate,
-                AudioFormat.CHANNEL_OUT_MONO,
-                AudioFormat.ENCODING_PCM_16BIT
-            ).coerceAtLeast(2048)
+        stopAudio() // Detener primero
 
-            audioTrack = AudioTrack.Builder()
-                .setAudioFormat(
-                    AudioFormat.Builder()
-                        .setEncoding(AudioFormat.ENCODING_PCM_16BIT)
-                        .setSampleRate(sampleRate)
-                        .setChannelMask(AudioFormat.CHANNEL_OUT_MONO)
-                        .build()
-                )
-                .setBufferSizeInBytes(minBuffer)
-                .build()
+        val minBuffer = AudioTrack.getMinBufferSize(
+            SAMPLE_RATE, CHANNEL_OUT_CONFIG, ENCODING
+        ).coerceAtLeast(MIN_BUFFER_SIZE)
 
-            audioTrack?.play()
-        }
+        audioTrack = AudioTrack.Builder()
+            .setAudioFormat(AudioFormat.Builder()
+                .setEncoding(ENCODING)
+                .setSampleRate(SAMPLE_RATE)
+                .setChannelMask(CHANNEL_OUT_CONFIG)
+                .build())
+            .setBufferSizeInBytes(minBuffer)
+            .build()
+            .apply { play() }
+
         audioTrack?.write(data, 0, data.size)
+        isPlaying = true
+    }
+
+    fun stopAudio() {
+        isPlaying = false
+        audioTrack?.apply {
+            stop()
+            release()
+        }
+        audioTrack = null
+    }
+
+    companion object {
+        private const val SAMPLE_RATE = 16000
+        private const val CHANNEL_CONFIG = AudioFormat.CHANNEL_IN_MONO
+        private const val CHANNEL_OUT_CONFIG = AudioFormat.CHANNEL_OUT_MONO
+        private const val ENCODING = AudioFormat.ENCODING_PCM_16BIT
+        private const val MIN_BUFFER_SIZE = 2048
     }
 }

@@ -30,10 +30,12 @@ class ChannelRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun disconnectFromChannel() {
-
-        webSocketManager.disconnect()
-        sessionManager.clearCurrentChannel()
+    override suspend fun connectToChannel(channelName: String, userId: String, token: String) {
+        webSocketManager.connect(channelName, userId, token)
     }
 
+    override suspend fun disconnectFromChannel() {
+        webSocketManager.disconnect()
+        // sessionManager.clearCurrentChannel()
+    }
 }
